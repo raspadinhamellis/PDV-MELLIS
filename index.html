@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raspadinha Mellis | PDV</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="main-header">
+        <div class="brand-container">
+            <img src="img/logo.png" alt="Logo Mellis" class="header-logo">
+            <div class="brand-text">
+                <h1>RASPADINHA MELLIS</h1>
+                <span>GOSTINHO DE INFÂNCIA</span>
+            </div>
+        </div>
+        
+        <div class="senha-monitor">
+            <small>SENHA</small>
+            <div id="display-senha-topo">000</div>
+        </div>
+
+        <nav class="nav-tabs">
+            <button onclick="switchSection('vendas')" id="btn-vendas" class="tab-btn active">🛒 VENDAS</button>
+            <button onclick="switchSection('relatorios')" id="btn-relatorios" class="tab-btn">📊 RELATÓRIOS</button>
+            <button onclick="switchSection('estoque')" id="btn-estoque" class="tab-btn">📦 ESTOQUE</button>
+        </nav>
+    </header>
+
+    <section id="sec-vendas" class="tab-content active">
+        <div class="pdv-grid">
+            <div class="selection-panel">
+                <div class="input-group">
+                    <label>NOME DO CLIENTE</label>
+                    <input type="text" id="nomeCliente" placeholder="Ex: LeO GordãO">
+                </div>
+
+                <div class="options-grid">
+                    <div class="input-group">
+                        <label>CATEGORIA</label>
+                        <select id="categoria" onchange="gerarListaProdutos()">
+                            <option value="TRADICIONAL">TRADICIONAL</option>
+                            <option value="ALCOOLICA">ALCOÓLICA</option>
+                        </select>
+                    </div>
+                    <div id="div-bebida" class="input-group hidden">
+                        <label>BASE ALCOÓLICA</label>
+                        <select id="bebida">
+                            <option value="">Selecione...</option>
+                            <option value="GIN">GIN</option>
+                            <option value="VODKA">VODKA</option>
+                            <option value="VODKA FR. VERMELHAS">VODKA FR. VERMELHAS</option>
+                            <option value="VODKA BLUEBERRY">VODKA BLUEBERRY</option>
+                            <option value="WHISKY">WHISKY</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>TAMANHO / PRODUTO</label>
+                    <select id="produto"></select> </div>
+
+                <div class="options-grid">
+                    <div class="input-group">
+                        <label>COBERTURA</label>
+                        <select id="cobertura">
+                            <option value="MORANGO">MORANGO</option>
+                            <option value="CHOCOLATE">CHOCOLATE</option>
+                            <option value="CARAMELO">CARAMELO</option>
+                            <option value="UVA">UVA</option>
+                            <option value="LIMÃO">LIMÃO</option>
+                            <option value="FR.VERMELHAS">FR.VERMELHAS</option>
+                            <option value="CHICLETE">CHICLETE</option>
+                            <option value="CEREJA">CEREJA</option>
+                            <option value="MENTA">MENTA</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Sabor</label>
+                        <select id="sabor">
+                            <option value="" selected disabled>ESCOLHER SABOR</option>
+                            <option value="GROSELHA">GROSELHA</option>
+                            <option value="MORANGO">MORANGO</option>
+                            <option value="GROSELHA AZUL">GROSELHA AZUL</option>
+                            <option value="UVA">UVA</option>
+                            <option value="ABACAXI">ABACAXI</option>
+                            <option value="MARACUJÁ">MARACUJÁ</option>
+                            <option value="CÔCO">CÔCO</option>
+                            <option value="MANGA">MANGA</option>
+                            <option value="CAJU">CAJU</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>ACOMPANHAMENTO</label>
+                        <select id="acompanhamento">
+                            <option value="GRANULADO DE CHOCOLATE">GRANULADO DE CHOCOLATE</option>
+                            <option value="PAÇOQUINHA">PAÇOQUINHA</option>
+                            <option value="AMENDOIM">AMENDOIM</option>
+                            <option value="GRANULADO COLORIDO">GRANULADO COLORIDO</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>ADICIONAIS</label>
+                    <div class="checkbox-group">
+                        <label class="extra-item"><input type="checkbox" class="add-check add-alcool" value="VODKAS" data-preco="6"> VODKAS (+6,00)</label>
+                        <label class="extra-item"><input type="checkbox" class="add-check add-alcool" value="GIN" data-preco="8"> GIN (+8,00)</label>
+                        <label class="extra-item"><input type="checkbox" class="add-check add-alcool" value="WHISKY" data-preco="10"> WHISKY (+10,00)</label>
+                        <label class="extra-item"><input type="checkbox" class="add-check" value="LEITE COND." data-preco="2"> LEITE COND. (+2,00)</label>
+                        <label class="extra-item"><input type="checkbox" class="add-check" value="COBERT. EXTRA" data-preco="2"> COBERT. EXTRA (+2,00)</label>
+                        <label class="extra-item"><input type="checkbox" class="add-check" value="ACOMP. EXTRA" data-preco="2"> ACOMP. EXTRA (+2,00)</label>
+                    </div>
+                </div>
+
+                <div class="action-area">
+                    <input type="number" id="quantidade" value="1" min="1">
+                    <button class="btn-add" onclick="adicionarAoCarrinho()">ADICIONAR PEDIDO</button>
+                </div>
+            </div>
+
+            <div class="cart-panel">
+                <h3>Resumo do Pedido</h3>
+                <div id="listaCarrinho" class="cart-items"></div>
+                <div class="cart-footer">
+                    <select id="formaPagamento">
+                        <option value="">PAGAMENTO...</option>
+                        <option value="PIX">PIX</option>
+                        <option value="DÉBITO">DÉBITO</option>
+                        <option value="CRÉDITO">CRÉDITO</option>
+                        <option value="DINHEIRO">DINHEIRO</option>
+                        <option value="CRIPTO">CRIPTO</option>
+                    </select>
+                    <div class="total-box">TOTAL: R$ <span id="totalDisplay">0,00</span></div>
+                    <button class="btn-finalizar" onclick="finalizarVenda()">FINALIZAR E IMPRIMIR</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="sec-relatorios" class="tab-content">
+        <div class="report-header">
+            <div class="date-filter">
+                <input type="date" id="dataDe">
+                <span>até</span>
+                <input type="date" id="dataAte">
+                <button onclick="carregarDadosRelatorio()">FILTRAR</button>
+            </div>
+            <button class="btn-pdf" onclick="fecharCaixaComRelatorio()">EXPORTAR PDF E FECHAR CAIXA</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card"><span>Total Bruto</span><h2 id="repTotal">R$ 0,00</h2></div>
+            <div class="stat-card"><span>Qtd Vendas</span><h2 id="repQtd">0</h2></div>
+            <div class="stat-card"><span>Mais Vendido</span><h2 id="repTop">-</h2></div>
+        </div>
+
+        <div class="details-grid">
+            <div class="detail-box"><h4>Financeiro</h4><div id="resFinanceiro"></div></div>
+            <div class="detail-box"><h4>Bases Alcoólicas</h4><div id="resBases"></div></div>
+            <div class="detail-box"><h4>Coberturas</h4><div id="resCoberturas"></div></div>
+            <div class="detail-box"><h4>Adicionais</h4><div id="resAdicionais"></div></div>
+            <div class="detail-box"><h4>Sabores</h4><div id="resSabores"></div></div>
+        </div>
+    </section>
+
+    <section id="sec-estoque" class="tab-content">
+        <div class="stats-grid" id="grid-estoque-dinamico"></div> <div class="action-area" style="margin-top: 20px;">
+            <select id="item-repor">
+                <option value="c180">COPO 180ml</option>
+                <option value="c300">COPO 300ml</option>
+                <option value="c440">COPO 440ml</option>
+                <option value="c550">COPO 550ml</option>
+                <option value="c770">COPO 770ml</option>
+                <option value="canudo">CANUDOS</option>
+                <option value="colher">COLHERES</option>
+                <option value="guardanapo">GUARDANAPOS</option>
+            </select>
+            <button class="btn-add" onclick="reporItemEspecifico()">REPOR 50 UNIDADES</button>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>

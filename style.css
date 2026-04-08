@@ -1,0 +1,233 @@
+:root { --p: #00d2ff; --s: #ff0080; --n: #ff00ea; --d: #000; }
+body { font-family: 'Poppins', sans-serif; margin: 0; background: #f4f4f9; }
+
+.main-header { background: var(--d) !important; 
+    padding: 40px 20px !important; 
+    text-align: center; 
+    position: relative !important; 
+    color: white;
+    min-height: 220px !important; /* Espaço para a logo e a neve cair */
+    overflow: hidden !important; }
+.main-header::before {
+    /* Criando vários flocos em posições diferentes para não ficarem em fila */
+    content: "❄";
+    position: absolute;
+    top: -50px;
+    left: 50%; /* Centraliza a origem para espalhar para os dois lados */
+    width: 1px; /* Ponto de origem fino para não criar barra de rolagem */
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 26px;
+    pointer-events: none;
+    /* Espalhando flocos em distâncias variadas para cobrir TUDO */
+    text-shadow: 
+        -800px 50px 0, -600px -20px 0, -400px 30px 0, -200px -10px 0,
+        0px 40px 0, 
+        200px -30px 0, 400px 20px 0, 600px -40px 0, 800px 10px 0,
+        1000px -25px 0, 1200px 35px 0, 1400px -15px 0;
+    animation: neveVerticalZigZag 6s linear infinite;
+    z-index: 1;
+}
+
+/* 1. Camada 2 de Neve (O SEGREDO DA CONTINUIDADE) */
+.main-header::after {
+    content: "❄";
+    position: absolute;
+    top: -50px;
+    left: 50%;
+    width: 1px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 26px;
+    pointer-events: none;
+    text-shadow: 
+        -700px 10px 0, -500px 40px 0, -300px -15px 0, -100px 25px 0,
+        100px 50px 0, 300px -10px 0, 500px 35px 0, 700px -20px 0,
+        900px 45px 0, 1100px -5px 0, 1300px 20px 0;
+    /* Adicionamos um delay de 3 segundos (metade do tempo total de 6s) */
+    animation: neveVerticalZigZag 6s linear infinite;
+    animation-delay: 3s; 
+    z-index: 1;
+}
+
+/* Nova animação com balanço lateral suave */
+@keyframes neveCaindoRealista {
+    0% { transform: translateY(0) translateX(0); }
+    25% { transform: translateY(100px) translateX(20px); }
+    50% { transform: translateY(200px) translateX(-20px); }
+    75% { transform: translateY(300px) translateX(20px); }
+    100% { transform: translateY(400px) translateX(0); }
+}
+
+.header-logo { height: 140px !important; /* Aumentado consideravelmente */
+    display: block !important;
+    margin: 0 auto 10px auto !important; 
+    filter: drop-shadow(0 8px 5px rgba(0,0,0,0.9)); /* Alto relevo real */ }
+.brand-text h1 { display: none !important; }
+.brand-text span { color: var(--s) !important; /* Cor Rosa da Logo */
+    font-size: 1.2rem !important; /* Aumento da fonte */
+    font-weight: 700 !important;
+    display: block;
+    margin-top: 5px;
+    text-transform: uppercase; /* Dá um ar mais profissional */ }
+
+.senha-monitor { position: absolute; right: 20px; top: 15px; border: 1px solid var(--n); padding: 5px 15px; border-radius: 10px; box-shadow: 0 0 10px var(--n); box-shadow: 0 4px 0 rgba(0,0,0,0.3); /* Alto Relevo na moldura */
+  padding: 8px 18px; /* Ajuste leve para acomodar o aumento do número */
+  animation: bordaOscila 2s infinite ease-in-out; /* Borda Neon Oscilante */}
+#display-senha-topo { color: var(--n); font-size: 2.3rem; font-weight: 800; text-shadow: 0 0 5px var(--n); /* Base do neon no número */
+  animation: numeroOscila 2s infinite ease-in-out; /* Número Neon Oscilante */ }
+
+.nav-tabs { display: flex; justify-content: center; gap: 20px; margin-top: 15px; }
+.tab-btn { color: #ffffff !important; /* Fonte Branca para quando não estiver selecionado */
+    background: #222 !important; /* Cinza bem escuro para destacar do fundo preto */
+    font-weight: 700;
+    opacity: 0.7; /* Fica levemente apagado para indicar que não é a aba ativa */
+    transition: all 0.2s ease; }
+/* Quando a aba estiver ativa, a cor da fonte muda para destacar */
+.tab-btn.active:nth-child(1) { 
+    color: #fff !important; 
+    opacity: 1;
+}
+
+.tab-btn.active:nth-child(2) { 
+    color: #fff !important; 
+    opacity: 1;
+}
+.tab-btn.active { color: var(--p); border-bottom: 2px solid var(--p); transform: translateY(4px) !important; /* Afundar */
+    box-shadow: 0 1px 0 #333 !important; }
+
+.tab-content { display: none; padding: 20px; max-width: 1200px; margin: auto; }
+.tab-content.active { display: block; }
+
+.pdv-grid { display: grid; grid-template-columns: 1fr 380px; gap: 20px; }
+.selection-panel, .cart-panel, .stat-card, .detail-box { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+
+.input-group { margin-bottom: 15px; }
+.input-group label { display: block; font-size: 0.7rem; font-weight: bold; color: #666; margin-bottom: 5px; }
+select, input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; }
+
+.options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.checkbox-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.extra-item { background: #f9f9f9; padding: 10px; border-radius: 8px; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; border: 1px solid #eee; }
+
+.action-area { display: flex; gap: 10px; }
+.action-area input { width: 70px; text-align: center; }
+.btn-add { flex: 1; background: var(--s); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; box-shadow: 0 6px 0 #b30059; /* Alto Relevo */
+  transition: all 0.1s ease; /* Suavidade para o clique */
+  animation: neonOscilaRosa 2s infinite ease-in-out; /* Neon Oscilante */}
+
+.cart-items { height: 300px; overflow-y: auto; border-bottom: 1px solid #eee; margin-bottom: 15px; }
+.total-box { font-size: 1.8rem; font-weight: 800; color: var(--s); text-align: center; margin: 15px 0; }
+.btn-finalizar { width: 100%; background: var(--p); color: white; border: none; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 6px 0 #0099bb; /* Alto Relevo */
+  transition: all 0.1s ease; /* Suavidade para o clique */
+  animation: neonOscilaAzul 2s infinite ease-in-out; /* Neon Oscilante */}
+
+.btn-add:active, .btn-finalizar:active {
+  transform: translateY(4px);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.2);
+}
+
+/* Relatório */
+.report-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+.details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+.hidden { display: none; }
+
+@keyframes neonOscilaRosa {
+  0% { box-shadow: 0 6px 0 #b30059, 0 0 5px var(--s); }
+  50% { box-shadow: 0 6px 0 #b30059, 0 0 20px var(--s); }
+  100% { box-shadow: 0 6px 0 #b30059, 0 0 5px var(--s); }
+}
+
+@keyframes neonOscilaAzul {
+  0% { box-shadow: 0 6px 0 #0099bb, 0 0 5px var(--p); }
+  50% { box-shadow: 0 6px 0 #0099bb, 0 0 20px var(--p); }
+  100% { box-shadow: 0 6px 0 #0099bb, 0 0 5px var(--p); }
+}
+
+/* Animação para a Borda do Monitor */
+@keyframes bordaOscila {
+  0% { border-color: var(--n); box-shadow: 0 4px 0 rgba(0,0,0,0.3), 0 0 5px var(--n); }
+  50% { border-color: #fff; box-shadow: 0 4px 0 rgba(0,0,0,0.3), 0 0 20px var(--n); }
+  100% { border-color: var(--n); box-shadow: 0 4px 0 rgba(0,0,0,0.3), 0 0 5px var(--n); }
+}
+
+/* Animação para o Número da Senha */
+@keyframes numeroOscila {
+  0% { text-shadow: 0 0 5px var(--n); opacity: 0.8; }
+  50% { text-shadow: 0 0 20px var(--n), 0 0 30px var(--n); opacity: 1; }
+  100% { text-shadow: 0 0 5px var(--n); opacity: 0.8; }
+}
+
+@keyframes neveVerticalZigZag {
+    0% { 
+        transform: translateY(0) translateX(0); 
+        opacity: 0; 
+    }
+    15% { opacity: 0.8; }
+    33% { transform: translateY(120px) translateX(25px); } /* Desvio suave */
+    66% { transform: translateY(240px) translateX(-25px); } /* Desvio oposto */
+    85% { opacity: 0.8; }
+    100% { 
+        transform: translateY(380px) translateX(0); 
+        opacity: 0; 
+    }
+}
+
+/* 1. PADRÃO ROSA PARA EXPORTAR E FECHAR CAIXA */
+.btn-pdf, .btn-fechar-caixa {
+    background-color: var(--s) !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 8px; /* Mantendo o padrão de cantos levemente arredondados */
+    padding: 10px 20px; /* Ajuste conforme o tamanho do seu layout */
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.1s ease !important;
+    /* Efeito Alto Relevo */
+    box-shadow: 0 6px 0 #b30059 !important;
+    /* Reuso do Neon que já criamos para o Adicionar Pedido */
+    animation: neonOscilaRosa 2s infinite ease-in-out !important;
+}
+
+/* Efeito de Afundar ao Clique */
+.btn-pdf:active, .btn-fechar-caixa:active {
+    transform: translateY(4px) !important;
+    box-shadow: 0 2px 0 #b30059 !important;
+}
+
+/* 2. CRIANDO O ESTILO ROSA NEON PARA O VALOR DO TOTAL BRUTO */
+#repTotal {
+    color: var(--s) !important; /* Rosa original da sua marca */
+    font-size: 2.2rem !important; /* Tamanho de destaque */
+    font-weight: 900 !important;
+    text-shadow: 0 0 10px var(--s), 0 0 20px rgba(255, 105, 180, 0.4) !important; /* Brilho Neon */
+    margin: 10px 0 !important;
+    display: block !important;
+}
+
+/* 1. Alvo: O botão que tem o comando de carregar o relatório */
+button[onclick="carregarDadosRelatorio()"] {
+    background-color: var(--p) !important; /* Cor Azul */
+    color: white !important;
+    border: none !important;
+    border-radius: 8px !important;
+    padding: 10px 24px !important;
+    font-weight: 800 !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+    transition: all 0.1s ease !important;
+    
+    /* 2. Efeito Alto Relevo (Sombra mais escura embaixo) */
+    box-shadow: 0 6px 0 #0099bb !important;
+    
+    /* 3. Efeito Neon (O brilho azul que já criamos antes) */
+    animation: neonOscilaAzul 2s infinite ease-in-out !important;
+    
+    display: inline-block !important;
+    margin: 10px 5px !important;
+}
+
+/* 4. Efeito de "Afundar" quando você clica com o mouse */
+button[onclick="carregarDadosRelatorio()"]:active {
+    transform: translateY(4px) !important;
+    box-shadow: 0 2px 0 #0099bb !important;
+}
