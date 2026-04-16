@@ -257,3 +257,66 @@ function switchSection(id) {
 }
 
 function atualizarCarrinhoTela() {
+    const lista = document.getElementById('listaCarrinho');
+    lista.innerHTML = carrinho.map((item, i) => `
+        <div style="border-bottom:1px solid #eee; padding:10px 0; font-size:0.8rem">
+            <b>${item.qtd}x ${item.nome} (${item.sabor})</b><br>
+            <button onclick="removerItem(${i})" style="color:red; border:none; background:none; cursor:pointer">Remover</button>
+        </div>
+    `).join('');
+    document.getElementById('totalDisplay').textContent = totalVenda.toFixed(2);
+}
+
+function removerItem(i) {
+    totalVenda -= carrinho[i].subtotal;
+    carrinho.splice(i, 1);
+    atualizarCarrinhoTela();
+}
+
+function gerarSenha() {
+    let hoje = new Date().toLocaleDateString();
+    let s = JSON.parse(localStorage.getItem("mellis_senha")) || {d: hoje, n: 0};
+    if(s.d !== hoje) s = {d: hoje, n: 0};
+    s.n++;
+    localStorage.setItem("mellis_senha", JSON.stringify(s));
+    return String(s.n).padStart(3, '0');
+}
+
+function atualizarSenhaTopo() {
+    let s = JSON.parse(localStorage.getItem("mellis_senha"));
+    document.getElementById('display-senha-topo').textContent = s ? String(s.n).padStart(3, '0') : "000";
+}
+
+function carregarDadosRelatorio() {
+    const deInput = document.getElementById('dataDe').value;
+    const ateInput = document.getElementById('dataAte').value;
+    const filtrados = db.filter(v => v.data.split('T')[0] >= deInput && v.data.split('T')[0] <= ateInput);
+    let resumo = { total: 0, pgtos: {}, bases: {}, cobs: {}, adds: {}, produtos: {}, sabores: {} };
+    filtrados.forEach(v => {
+        resumo.total += v.total;
+        resumo.pgtos[v.pgto] = (resumo.pgtos[v.pgto] || 0) + v.total;
+        v.itens.forEach(i => {
+            resumo.produtos[i.nome] = (resumo.produtos[i.nome] || 0) + i.qtd;
+            resumo.sabores[i.sabor] = (resumo.sabores[i.sabor] || 0) + i.qtd;
+            if(i.bebida) resumo.bases[i.bebida] = (resumo.bases[i.bebida] || 0) + i.qtd;
+            resumo.cobs[i.cobertura] = (resumo.cobs[i.cobertura] || 0) + i.qtd;
+            if(i.extras) i.extras.forEach(ex => resumo.adds[ex.nome] = (resumo.adds[ex.nome] || 0) + i.qtd);
+        });
+    });
+    let top = "-"; let max = 0;
+    for (let p in resumo.produtos) { if (resumo.produtos[p] > max) { max = resumo.produtos[p]; top = p; } }
+    document.getElementById('repTotal').textContent = "R$ " + resumo.total.toFixed(2);
+    document.getElementById('repQtd').textContent = filtrados.length;
+    document.getElementById('repTop').textContent = top.toUpperCase();
+    renderLista('resFinanceiro', resumo.pgtos, true);
+    renderLista('resSabores', resumo.sabores);
+    renderLista('resBases', resumo.bases);
+    renderLista('resCoberturas', resumo.cobs);
+    renderLista('resAdicionais', resumo.adds);
+}
+
+function renderLista(id, obj, isMoney = false) {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.innerHTML = Object.entries(obj).map(([k, v]) => `<div>${k}: ${isMoney ? 'R$ '+v.toFixed(2) : v + ' un'}</div>`).join('');
+}
