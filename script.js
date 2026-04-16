@@ -152,26 +152,56 @@ function finalizarVenda() {
 }
 
 function imprimirComanda(venda) {
+    const agora = new Date();
+    const dataHora = agora.toLocaleString("pt-BR");
     const logoSrc = "img/logo.png"; 
-    const html = `
-        <html><head><style>
-            body { font-family: 'Courier New', monospace; width: 58mm; padding: 2px; font-size: 16px; text-align: center; color: #000; }
-            .divider { border-top: 2px dashed #000; margin: 10px 0; }
-            .senha-box { font-size: 28px; font-weight: bold; border: 2px solid #000; padding: 5px; margin: 5px 0; }
-            .detalhes { text-align: left; font-size: 14px; }
-        </style></head><body>
-            <img src="${logoSrc}" style="width:100px"><br>
-            <b>RASPADINHA MELLIS</b><br>
-            <div class="senha-box">SENHA: ${venda.senha}</div>
-            <div class="detalhes">
-                <b>CLIENTE:</b> ${venda.cliente}<br>
-                ${venda.itens.map(i => `${i.qtd}x ${i.nome} (${i.sabor})`).join('<br>')}
-            </div>
-            <div class="divider"></div>
-            <b>TOTAL: R$ ${venda.total.toFixed(2)}</b>
-        </body></html>`;
 
-    window.location.href = "rawbt:base64," + btoa(unescape(encodeURIComponent(html)));
+    // O seu HTML original, completo e com os estilos
+    const conteudoComanda = `
+        <html><head><style>
+            body { font-family: 'Courier New', monospace; width: 58mm; padding: 2px; font-size: 18px; line-height: 1.3; text-align: center; color: #000; }
+            .logo { width: 120px; display: block; margin: 0 auto 5px auto; }
+            .divider { border-top: 2px dashed #000; margin: 12px 0; }
+            .senha-box { font-size: 32px; font-weight: bold; border: 2px solid #000; padding: 10px; margin: 10px 0; }
+            .item-container { text-align: left; margin-bottom: 12px; font-size: 17px; }
+            .item-linha { display: flex; justify-content: space-between; font-weight: bold; }
+            .sub-item { font-size: 15px; margin-left: 5px; display: flex; justify-content: space-between; }
+            .final-msg { font-size: 15px; margin: 20px 0; line-height: 1.4; }
+            .total-area { font-size: 20px; font-weight: bold; margin-top: 10px; }
+        </style></head><body>
+            <img src="${logoSrc}" class="logo">
+            <b>RASPADINHA MELLIS</b><br>
+            <small>GOSTINHO DE INFÂNCIA</small>
+            <div class="divider"></div>
+            <div style="font-size:14px">${dataHora}</div>
+            <div class="senha-box">SENHA: ${venda.senha}</div>
+            <b>CLIENTE: ${venda.cliente}</b>
+            <div class="divider"></div>
+            ${venda.itens.map(item => `
+                <div class="item-container">
+                    <div class="item-linha">
+                        <span>${item.qtd}x ${item.nome} (${item.sabor})</span>
+                        <span>R$ ${(item.precoBase * item.qtd).toFixed(2)}</span>
+                    </div>
+                    <div class="sub-item"><span>Cob: ${item.cobertura}</span><span>--</span></div>
+                    <div class="sub-item"><span>Ac: ${item.acomp}</span><span>--</span></div>
+                    ${item.bebida ? `<div class="sub-item"><span>Base: ${item.bebida}</span><span>R$ ${(item.precoBebida * item.qtd).toFixed(2)}</span></div>` : ''}
+                    ${item.extras.map(ad => `<div class="sub-item"><span>+ ${ad.nome}</span><span>R$ ${(ad.preco * item.qtd).toFixed(2)}</span></div>`).join('')}
+                </div>
+                <div class="divider" style="border-top: 1px dotted #000; margin: 5px 0;"></div>
+            `).join('')}
+            <div class="total-area"><div style="display:flex; justify-content:space-between"><span>TOTAL:</span><span>R$ ${venda.total.toFixed(2)}</span></div></div>
+            <div style="text-align: right; font-size: 14px;">PGTO: ${venda.pgto}</div>
+            <div class="divider"></div>
+            <div class="final-msg"><b>PARABÉNS</b>, você está prestes a vivenciar o verdadeiro GOSTINHO DE INFÂNCIA.</div>
+            <div class="divider"></div>
+            <div style="font-weight:bold">SIGA NOSSO INSTAGRAM<br>@raspadinha.mellis</div><br>.
+        </body></html>
+    `;
+
+    // A MUDANÇA CRUCIAL: Adicionamos o ":html" antes do base64
+    const rawbtUrl = "rawbt:html:base64," + btoa(unescape(encodeURIComponent(conteudoComanda)));
+    window.location.href = rawbtUrl;
 }
 
 function fecharCaixaComRelatorio() {
