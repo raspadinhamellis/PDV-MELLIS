@@ -184,13 +184,8 @@ function finalizarVenda() {
 function fecharCaixaComRelatorio() {
     const agora = new Date();
     const hora = agora.getHours();
-    
-    // NOVO: Alerta se clicar antes das 23h
-    if (hora < 23) {
-        alert("📊 Gerando RELATÓRIO PARCIAL.\n\nO fechamento definitivo de caixa e o reset do sistema só estarão disponíveis após as 23:00.");
-    }
+    if (hora < 23) alert("📊 Gerando RELATÓRIO PARCIAL.\n\nO reset do sistema só libera após as 23:00.");
 
-    // 1. GERA O RELATÓRIO (Seja parcial ou definitivo)
     const financeiro = document.getElementById('resFinanceiro').innerText;
     const bases = document.getElementById('resBases').innerText;
     const coberturas = document.getElementById('resCoberturas').innerText;
@@ -198,40 +193,42 @@ function fecharCaixaComRelatorio() {
     const sabores = document.getElementById('resSabores').innerText;
     const bruto = document.getElementById('repTotal').innerText;
 
-    let win = window.open('', '', 'width=800,height=900');
-    win.document.write(`
-        <html><head><title>Relatório Mellis</title>
-        <style>
-            body { font-family: sans-serif; padding: 20px; color: #000; }
-            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-            th, td { border: 1px solid #333; padding: 8px; text-align: left; }
-            th { background: #eee; }
-            h1 { text-align: center; margin-bottom: 0; }
-            .meta { text-align: center; font-size: 12px; margin-bottom: 20px; }
-            h2 { border-bottom: 2px solid #ff007f; padding-bottom: 5px; font-size: 18px; margin-top: 20px; }
-            pre { white-space: pre-wrap; font-family: sans-serif; margin: 0; }
+    // Criamos o HTML que o RawBT vai ler
+    const htmlRelatorio = `
+        <html><head><style>
+            body { font-family: sans-serif; padding: 10px; width: 58mm; }
+            table { width: 100%; border-collapse: collapse; font-size: 10px; }
+            th, td { border: 1px solid #000; padding: 4px; }
+            h1, h2 { text-align: center; font-size: 14px; margin: 5px 0; }
+            pre { white-space: pre-wrap; font-size: 10px; margin: 0; }
         </style></head><body>
-            <h1>${hora >= 23 ? 'FECHAMENTO DE CAIXA' : 'RELATÓRIO PARCIAL'}</h1>
-            <div class="meta">MELLIS | Gerado em: ${agora.toLocaleString()}</div>
-            
-            <h2>FINANCEIRO</h2>
-            <pre>${financeiro}</pre>
-
-            <h2>DETALHAMENTO DE VENDAS</h2>
+            <h1>${hora >= 23 ? 'FECHAMENTO' : 'P. RELATÓRIO'}</h1>
+            <p style="font-size:10px; text-align:center">MELLIS - ${agora.toLocaleString()}</p>
+            <h2>FINANCEIRO</h2><pre>${financeiro}</pre>
+            <h2>VENDAS</h2>
             <table>
-                <thead><tr><th>CATEGORIA</th><th>RESUMO DOS ITENS</th></tr></thead>
-                <tbody>
-                    <tr><td>SABORES</td><td><pre>${sabores}</pre></td></tr>
-                    <tr><td>BASES</td><td><pre>${bases}</pre></td></tr>
-                    <tr><td>COBERTURAS</td><td><pre>${coberturas}</pre></td></tr>
-                    <tr><td>ADICIONAIS</td><td><pre>${adicionais}</pre></td></tr>
-                </tbody>
+                <tr><td>SABORES</td><td><pre>${sabores}</pre></td></tr>
+                <tr><td>BASES</td><td><pre>${bases}</pre></td></tr>
+                <tr><td>EXTRAS</td><td><pre>${coberturas}\n${adicionais}</pre></td></tr>
             </table>
+            <h2 style="text-align:right">TOTAL: ${bruto}</h2>
+        </body></html>`;
 
-            <h2 style="text-align:right">TOTAL BRUTO: ${bruto}</h2>
-            <script>window.onload = () => { window.print(); window.close(); };</script>
-        </body></html>
-    `);
+    // COMANDO MÁGICO PARA A IMPRESSORA
+    const rawbtUrl = "rawbt:base64," + btoa(unescape(encodeURIComponent(htmlRelatorio)));
+    window.location.href = rawbtUrl;
+
+    if (hora >= 23) {
+        setTimeout(() => {
+            if (confirm("Deseja ZERAR o sistema para amanhã?")) {
+                db = [];
+                localStorage.setItem("mellis_v3", "[]");
+                localStorage.setItem("mellis_senha", JSON.stringify({d: new Date().toLocaleDateString(), n: 0}));
+                location.reload();
+            }
+        }, 2000);
+    }
+}
     win.document.close();
 
     // 2. LÓGICA DE FECHAMENTO APÓS AS 23H
@@ -254,8 +251,8 @@ function imprimirComanda(venda) {
     const dataHora = agora.toLocaleString("pt-BR");
     const logoSrc = "img/logo.png"; 
 
-    let win = window.open('', '', 'width=450,height=800');
-    win.document.write(`
+    // Guardamos o seu HTML original EXATAMENTE como ele é nesta variável
+    const conteudoComanda = `
         <html><head><style>
             body { font-family: 'Courier New', monospace; width: 58mm; padding: 2px; font-size: 18px; line-height: 1.3; text-align: center; color: #000; }
             .logo { width: 120px; display: block; margin: 0 auto 5px auto; }
@@ -294,10 +291,13 @@ function imprimirComanda(venda) {
             <div class="final-msg"><b>PARABÉNS</b>, você está prestes a vivenciar o verdadeiro GOSTINHO DE INFÂNCIA. Aprecie a <b>RASPADINHA MELLIS</b> e sinta o privilégio dessa experiência.</div>
             <div class="divider"></div>
             <div style="font-weight:bold">SIGA NOSSO INSTAGRAM<br>@raspadinha.mellis</div><br>.
-            <script>window.onload = () => { setTimeout(() => { window.print(); window.close(); }, 500); };</script>
         </body></html>
-    `);
-    win.document.close();
+    `;
+
+    // --- AQUI ESTÁ A MUDANÇA PARA O RAWBT ---
+    // Em vez de window.open, enviamos o conteúdo acima direto para o App
+    const rawbtUrl = "rawbt:base64," + btoa(unescape(encodeURIComponent(conteudoComanda)));
+    window.location.href = rawbtUrl;
 }
 
 // --- NAVEGAÇÃO E AUXILIARES ---
