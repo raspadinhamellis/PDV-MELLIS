@@ -32,8 +32,8 @@ window.onload = () => {
     gerarListaProdutos();
     atualizarSenhaTopo();
     atualizarDisplayEstoque();
-    document.getElementById('dataDe').value = new Date().toISOString().split('T')[0];
-    document.getElementById('dataAte').value = new Date().toISOString().split('T')[0];
+    if(document.getElementById('dataDe')) document.getElementById('dataDe').value = new Date().toISOString().split('T')[0];
+    if(document.getElementById('dataAte')) document.getElementById('dataAte').value = new Date().toISOString().split('T')[0];
 };
 
 function atualizarDisplayEstoque() {
@@ -63,13 +63,6 @@ function ajusteManual(item, qtd) {
     atualizarDisplayEstoque();
 }
 
-function reporItemEspecifico() {
-    const item = document.getElementById('item-repor').value;
-    estoque[item] = (parseInt(estoque[item]) || 0) + 50;
-    localStorage.setItem("mellis_estoque", JSON.stringify(estoque));
-    atualizarDisplayEstoque();
-}
-
 function gerarListaProdutos() {
     const cat = document.getElementById('categoria').value;
     const select = document.getElementById('produto');
@@ -95,8 +88,7 @@ function adicionarAoCarrinho() {
     const cat = document.getElementById('categoria').value;
     const bebidaValor = document.getElementById('bebida').value;
     if (cat === 'ALCOOLICA' && (bebidaValor === "" || !bebidaValor)) {
-        alert("⚠️ ATENÇÃO: Para categoria ALCOÓLICA, selecione a BASE (Gin, Vodka, etc)!");
-        document.getElementById('bebida').focus();
+        alert("⚠️ ATENÇÃO: Selecione a BASE!");
         return;
     }
     const prodSelect = document.getElementById('produto');
@@ -113,10 +105,12 @@ function adicionarAoCarrinho() {
         else if (bUpper.includes("GIN")) precoBebida = 8;
         else if (bebidaValor !== "") precoBebida = 6;
     }
+
     const extras = Array.from(document.querySelectorAll('.add-check:checked')).map(ck => ({
         nome: ck.value, 
         preco: parseFloat(ck.dataset.preco)
     }));
+
     const subtotal = (precoBase + precoBebida + extras.reduce((a,b)=>a+b.preco,0)) * qtd;
     carrinho.push({ 
         nome, cat, qtd, precoBase, volume, sabor: document.getElementById('sabor').value,
@@ -127,131 +121,81 @@ function adicionarAoCarrinho() {
     });
     totalVenda += subtotal;
     atualizarCarrinhoTela();
-    document.querySelectorAll('.add-check').forEach(ck => ck.checked = false);
 }
 
 function finalizarVenda() {
     const pgto = document.getElementById('formaPagamento').value;
     if(!carrinho.length || !pgto) return alert("Verifique o pedido!");
+
     carrinho.forEach(item => {
         const keyCopo = "c" + item.volume.replace("ml", "");
         if(estoque[keyCopo] !== undefined) estoque[keyCopo] -= item.qtd;
-        estoque.canudo -= item.qtd;
-        estoque.colher -= item.qtd;
-        estoque.guardanapo -= item.qtd;
+        estoque.canudo -= item.qtd; estoque.colher -= item.qtd; estoque.guardanapo -= item.qtd;
     });
     localStorage.setItem("mellis_estoque", JSON.stringify(estoque));
+
     const venda = {
         data: new Date().toISOString(),
         cliente: document.getElementById('nomeCliente').value || "Cliente",
         senha: gerarSenha(), itens: [...carrinho], total: totalVenda, pgto
     };
+
     db.push(venda);
     localStorage.setItem("mellis_v3", JSON.stringify(db));
-    const urlPlanilha = "https://script.google.com/macros/s/AKfycbzf6O3EaH-H8HjG0wB0Y8L-vHqS-K0-T_H-98U2U4X-8-8/exec";
-    fetch(urlPlanilha, { method: 'POST', mode: 'no-cors', body: JSON.stringify(venda) });
+    
     imprimirComanda(venda);
     atualizarSenhaTopo();
+    
     carrinho = []; totalVenda = 0;
     document.getElementById('nomeCliente').value = "";
     atualizarCarrinhoTela();
-    atualizarDisplayEstoque();
+}
+
+function imprimirComanda(venda) {
+    const logoSrc = "img/logo.png"; 
+    const html = `
+        <html><head><style>
+            body { font-family: 'Courier New', monospace; width: 58mm; padding: 2px; font-size: 16px; text-align: center; color: #000; }
+            .divider { border-top: 2px dashed #000; margin: 10px 0; }
+            .senha-box { font-size: 28px; font-weight: bold; border: 2px solid #000; padding: 5px; margin: 5px 0; }
+            .detalhes { text-align: left; font-size: 14px; }
+        </style></head><body>
+            <img src="${logoSrc}" style="width:100px"><br>
+            <b>RASPADINHA MELLIS</b><br>
+            <div class="senha-box">SENHA: ${venda.senha}</div>
+            <div class="detalhes">
+                <b>CLIENTE:</b> ${venda.cliente}<br>
+                ${venda.itens.map(i => `${i.qtd}x ${i.nome} (${i.sabor})`).join('<br>')}
+            </div>
+            <div class="divider"></div>
+            <b>TOTAL: R$ ${venda.total.toFixed(2)}</b>
+        </body></html>`;
+
+    window.location.href = "rawbt:base64," + btoa(unescape(encodeURIComponent(html)));
 }
 
 function fecharCaixaComRelatorio() {
     const agora = new Date();
-    const hora = agora.getHours();
-    if (hora < 23) alert("📊 Gerando RELATÓRIO PARCIAL.\n\nO reset do sistema só libera após as 23:00.");
+    const html = `<html><body style="width:58mm;font-family:sans-serif;font-size:12px;">
+        <h2>FECHAMENTO MELLIS</h2>
+        ${document.getElementById('resFinanceiro').innerHTML}
+        <hr>
+        TOTAL: ${document.getElementById('repTotal').innerText}
+    </body></html>`;
+    window.location.href = "rawbt:base64," + btoa(unescape(encodeURIComponent(html)));
 
-    const htmlRelatorio = `
-        <html><head><style>
-            body { font-family: sans-serif; padding: 10px; width: 58mm; text-align: center; }
-            table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top:10px; }
-            th, td { border: 1px solid #000; padding: 4px; text-align: left; }
-            pre { white-space: pre-wrap; font-size: 10px; margin: 0; }
-        </style></head><body>
-            <h1>${hora >= 23 ? 'FECHAMENTO' : 'P. RELATÓRIO'}</h1>
-            <p>MELLIS - ${agora.toLocaleString()}</p>
-            <div style="text-align:left; font-size:10px">
-                <b>FINANCEIRO:</b><br><pre>${document.getElementById('resFinanceiro').innerText}</pre>
-            </div>
-            <table>
-                <tr><td>SABORES</td><td><pre>${document.getElementById('resSabores').innerText}</pre></td></tr>
-                <tr><td>BASES</td><td><pre>${document.getElementById('resBases').innerText}</pre></td></tr>
-                <tr><td>EXTRAS</td><td><pre>${document.getElementById('resCoberturas').innerText}\n${document.getElementById('resAdicionais').innerText}</pre></td></tr>
-            </table>
-            <h3 style="text-align:right">TOTAL: ${document.getElementById('repTotal').innerText}</h3>
-        </body></html>`;
-
-    const rawbtUrl = "rawbt:base64," + btoa(unescape(encodeURIComponent(htmlRelatorio)));
-    window.location.href = rawbtUrl;
-
-    if (hora >= 23) {
-        setTimeout(() => {
-            if (confirm("Deseja ZERAR o sistema para amanhã?")) {
-                db = [];
-                localStorage.setItem("mellis_v3", "[]");
-                localStorage.setItem("mellis_senha", JSON.stringify({d: new Date().toLocaleDateString(), n: 0}));
-                location.reload();
-            }
-        }, 2000);
+    if (agora.getHours() >= 23) {
+        if (confirm("Zerar sistema?")) {
+            db = []; localStorage.setItem("mellis_v3", "[]");
+            localStorage.setItem("mellis_senha", JSON.stringify({d: new Date().toLocaleDateString(), n: 0}));
+            location.reload();
+        }
     }
-}
-
-function imprimirComanda(venda) {
-    const agora = new Date();
-    const dataHora = agora.toLocaleString("pt-BR");
-    const logoSrc = "img/logo.png"; 
-    const conteudoComanda = `
-        <html><head><style>
-            body { font-family: 'Courier New', monospace; width: 58mm; padding: 2px; font-size: 18px; line-height: 1.3; text-align: center; color: #000; }
-            .logo { width: 120px; display: block; margin: 0 auto 5px auto; }
-            .divider { border-top: 2px dashed #000; margin: 12px 0; }
-            .senha-box { font-size: 32px; font-weight: bold; border: 2px solid #000; padding: 10px; margin: 10px 0; }
-            .item-container { text-align: left; margin-bottom: 12px; font-size: 17px; }
-            .item-linha { display: flex; justify-content: space-between; font-weight: bold; }
-            .sub-item { font-size: 15px; margin-left: 5px; display: flex; justify-content: space-between; }
-            .final-msg { font-size: 15px; margin: 20px 0; line-height: 1.4; }
-            .total-area { font-size: 20px; font-weight: bold; margin-top: 10px; }
-        </style></head><body>
-            <img src="${logoSrc}" class="logo">
-            <b>RASPADINHA MELLIS</b><br>
-            <small>GOSTINHO DE INFÂNCIA</small>
-            <div class="divider"></div>
-            <div style="font-size:14px">${dataHora}</div>
-            <div class="senha-box">SENHA: ${venda.senha}</div>
-            <b>CLIENTE: ${venda.cliente}</b>
-            <div class="divider"></div>
-            ${venda.itens.map(item => `
-                <div class="item-container">
-                    <div class="item-linha">
-                        <span>${item.qtd}x ${item.nome} (${item.sabor})</span>
-                        <span>R$ ${(item.precoBase * item.qtd).toFixed(2)}</span>
-                    </div>
-                    <div class="sub-item"><span>Cob: ${item.cobertura}</span><span>--</span></div>
-                    <div class="sub-item"><span>Ac: ${item.acomp}</span><span>--</span></div>
-                    ${item.bebida ? `<div class="sub-item"><span>Base: ${item.bebida}</span><span>R$ ${(item.precoBebida * item.qtd).toFixed(2)}</span></div>` : ''}
-                    ${item.extras.map(ad => `<div class="sub-item"><span>+ ${ad.nome}</span><span>R$ ${(ad.preco * item.qtd).toFixed(2)}</span></div>`).join('')}
-                </div>
-                <div class="divider" style="border-top: 1px dotted #000; margin: 5px 0;"></div>
-            `).join('')}
-            <div class="total-area"><div style="display:flex; justify-content:space-between"><span>TOTAL:</span><span>R$ ${venda.total.toFixed(2)}</span></div></div>
-            <div style="text-align: right; font-size: 14px;">PGTO: ${venda.pgto}</div>
-            <div class="divider"></div>
-            <div class="final-msg"><b>PARABÉNS</b>, você está prestes a vivenciar o verdadeiro GOSTINHO DE INFÂNCIA. Aprecie a <b>RASPADINHA MELLIS</b> e sinta o privilégio dessa experiência.</div>
-            <div class="divider"></div>
-            <div style="font-weight:bold">SIGA NOSSO INSTAGRAM<br>@raspadinha.mellis</div><br>.
-        </body></html>`;
-
-    const rawbtUrl = "rawbt:base64," + btoa(unescape(encodeURIComponent(conteudoComanda)));
-    window.location.href = rawbtUrl;
 }
 
 function switchSection(id) {
     document.querySelectorAll('.tab-content').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('sec-' + id).classList.add('active');
-    if(event && event.currentTarget) event.currentTarget.classList.add('active');
     if(id === 'relatorios') carregarDadosRelatorio();
     if(id === 'estoque') atualizarDisplayEstoque();
 }
@@ -259,18 +203,14 @@ function switchSection(id) {
 function atualizarCarrinhoTela() {
     const lista = document.getElementById('listaCarrinho');
     lista.innerHTML = carrinho.map((item, i) => `
-        <div style="border-bottom:1px solid #eee; padding:10px 0; font-size:0.8rem">
-            <b>${item.qtd}x ${item.nome} (${item.sabor})</b><br>
-            <button onclick="removerItem(${i})" style="color:red; border:none; background:none; cursor:pointer">Remover</button>
-        </div>
-    `).join('');
+        <div style="border-bottom:1px solid #eee; padding:5px; font-size:0.8rem">
+            <b>${item.qtd}x ${item.nome}</b> <a href="#" onclick="removerItem(${i})" style="color:red">x</a>
+        </div>`).join('');
     document.getElementById('totalDisplay').textContent = totalVenda.toFixed(2);
 }
 
 function removerItem(i) {
-    totalVenda -= carrinho[i].subtotal;
-    carrinho.splice(i, 1);
-    atualizarCarrinhoTela();
+    totalVenda -= carrinho[i].subtotal; carrinho.splice(i, 1); atualizarCarrinhoTela();
 }
 
 function gerarSenha() {
@@ -288,35 +228,14 @@ function atualizarSenhaTopo() {
 }
 
 function carregarDadosRelatorio() {
-    const deInput = document.getElementById('dataDe').value;
-    const ateInput = document.getElementById('dataAte').value;
-    const filtrados = db.filter(v => v.data.split('T')[0] >= deInput && v.data.split('T')[0] <= ateInput);
-    let resumo = { total: 0, pgtos: {}, bases: {}, cobs: {}, adds: {}, produtos: {}, sabores: {} };
+    const de = document.getElementById('dataDe').value;
+    const ate = document.getElementById('dataAte').value;
+    const filtrados = db.filter(v => v.data.split('T')[0] >= de && v.data.split('T')[0] <= ate);
+    let total = 0; let pgtos = {};
     filtrados.forEach(v => {
-        resumo.total += v.total;
-        resumo.pgtos[v.pgto] = (resumo.pgtos[v.pgto] || 0) + v.total;
-        v.itens.forEach(i => {
-            resumo.produtos[i.nome] = (resumo.produtos[i.nome] || 0) + i.qtd;
-            resumo.sabores[i.sabor] = (resumo.sabores[i.sabor] || 0) + i.qtd;
-            if(i.bebida) resumo.bases[i.bebida] = (resumo.bases[i.bebida] || 0) + i.qtd;
-            resumo.cobs[i.cobertura] = (resumo.cobs[i.cobertura] || 0) + i.qtd;
-            if(i.extras) i.extras.forEach(ex => resumo.adds[ex.nome] = (resumo.adds[ex.nome] || 0) + i.qtd);
-        });
+        total += v.total;
+        pgtos[v.pgto] = (pgtos[v.pgto] || 0) + v.total;
     });
-    let top = "-"; let max = 0;
-    for (let p in resumo.produtos) { if (resumo.produtos[p] > max) { max = resumo.produtos[p]; top = p; } }
-    document.getElementById('repTotal').textContent = "R$ " + resumo.total.toFixed(2);
-    document.getElementById('repQtd').textContent = filtrados.length;
-    document.getElementById('repTop').textContent = top.toUpperCase();
-    renderLista('resFinanceiro', resumo.pgtos, true);
-    renderLista('resSabores', resumo.sabores);
-    renderLista('resBases', resumo.bases);
-    renderLista('resCoberturas', resumo.cobs);
-    renderLista('resAdicionais', resumo.adds);
-}
-
-function renderLista(id, obj, isMoney = false) {
-    const el = document.getElementById(id);
-    if(!el) return;
-    el.innerHTML = Object.entries(obj).map(([k, v]) => `<div>${k}: ${isMoney ? 'R$ '+v.toFixed(2) : v + ' un'}</div>`).join('');
+    document.getElementById('repTotal').textContent = "R$ " + total.toFixed(2);
+    document.getElementById('resFinanceiro').innerHTML = Object.entries(pgtos).map(([k, v]) => `<div>${k}: R$ ${v.toFixed(2)}</div>`).join('');
 }
